@@ -1,15 +1,37 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+import clientPromise from '@/lib/mongodb';
+import { getSession, withApiAuthRequired } from '@auth0/nextjs-auth0';
 import type { NextApiRequest, NextApiResponse } from 'next'
 import OpenAI from 'openai';
 
-type Data = {
-  post: string
+type Post = {
+  postContent: string,
+  title: string,
+  metaDescription: string,
+}
+interface Data {
+  post: Post
 }
 
-export default async function handler(
+export default withApiAuthRequired(async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data>
 ) {
+  const session = await getSession(req, res); 
+  const user = session?.user;
+
+  const client = await clientPromise;
+  const db = client.db('BlogStandard');
+
+  const userCollection = db.collection('users');
+  const userProfile = await userCollection.findOne({
+    auth0Id: user?.sub,
+  });
+  console.log(userProfile)
+  if (!userProfile?.availableTokens) {
+    res.status(403);
+    return;
+  }
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
@@ -83,11 +105,32 @@ export default async function handler(
       ]
     })
     const title = titleResponse.choices[0]?.message?.content ?? '';
-    const meta = metaResponse.choices[0]?.message?.content ?? '';
-    console.log('POST: ', postContent);
-    console.log('TITLE: ', title);
-    console.log('META: ', meta);
-    res.status(200).json({ post: postContent })
+    const metaDescription = metaResponse.choices[0]?.message?.content ?? '';
+
+    await userCollection.updateOne({
+      auth0Id: user?.sub,
+    },
+    {
+      $inc: {
+        availableTokens: -1,
+      },
+    });
+
+    const post = await db.collection('posts').insertOne({
+      postContent,
+      title,
+      metaDescription,
+      topic,
+      keywords,
+      userId: userProfile?._id,
+      created: new Date(),
+    });
+    res.status(200).json({
+      post: {
+        postContent,
+        title,
+        metaDescription,
+      }})
   } catch (error) {
     if (error instanceof OpenAI.APIError) {
       console.error(error.status);
@@ -96,7 +139,9 @@ export default async function handler(
       console.error(error.type);
     }
   }
-}
+});
+
+
 
 // The content should be formatted in SEO-optimized HTML. The response must also include appropriate HTML title and meta description content.
 //       The return format must be stringified JSON in the following format
