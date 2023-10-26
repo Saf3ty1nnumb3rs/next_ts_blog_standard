@@ -27,7 +27,7 @@ export default withApiAuthRequired(async function handler(
   const userProfile = await userCollection.findOne({
     auth0Id: user?.sub,
   });
-  console.log(userProfile)
+
   if (!userProfile?.availableTokens) {
     res.status(403);
     return;
