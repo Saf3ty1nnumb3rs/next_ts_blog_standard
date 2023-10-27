@@ -1,13 +1,12 @@
 import { AppLayout } from "@/components/AppLayout/AppLayout";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0";
+import { useRouter } from "next/router";
 import { ChangeEvent, FormEvent, useState } from "react";
 
-export default function NewPost(props: unknown) {
-  console.log('NEW POST PROPS: ', props);
-
+export default function NewPost() {
+  const router = useRouter();
   const [topic, setTopic] = useState<string>('');
   const [keywords, setKeywords] = useState<string>('');
-  const [postContent, setPostContent] = useState('');
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -24,7 +23,9 @@ export default function NewPost(props: unknown) {
       });
       const json = await response.json();
       console.log('RESULT: ', json);
-      setPostContent(json.post.postContent);
+      if (json?.postId) {
+        router.push(`/post/${json.postId}`);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -60,11 +61,6 @@ export default function NewPost(props: unknown) {
           Generate
         </button>
       </form>
-      
-      <div
-        dangerouslySetInnerHTML={{__html: postContent }}
-        className="max-w-screen-sm p-10"
-      />
     </div> 
   )
 }

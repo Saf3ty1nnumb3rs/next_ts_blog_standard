@@ -56,9 +56,7 @@ export const AppLayout = ({ children}: { children: React.ReactNode }) => {
         )}
         </div>
       </div>
-      <div>
-        {children}
-      </div>
+      {children}
     </div>
   );
 };

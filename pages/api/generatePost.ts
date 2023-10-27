@@ -1,16 +1,12 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import clientPromise from '@/lib/mongodb';
 import { getSession, withApiAuthRequired } from '@auth0/nextjs-auth0';
+import { ObjectId } from 'mongodb';
 import type { NextApiRequest, NextApiResponse } from 'next'
 import OpenAI from 'openai';
 
-type Post = {
-  postContent: string,
-  title: string,
-  metaDescription: string,
-}
 interface Data {
-  post: Post
+  postId: ObjectId
 }
 
 export default withApiAuthRequired(async function handler(
@@ -50,8 +46,8 @@ export default withApiAuthRequired(async function handler(
         },
         {
           role: 'user',
-          content: `Write a long and detailed SEO-optimized blog post about ${topic}, that targets the following comma-separated keywords: ${keywords}.
-          The content should be formatted in SEO-optimized HTML, limited to the following HTML tags: p, h1, h2, h3, h4, h5, h6, strong, li, ol, ul, i.`
+          content: `Write a long and detailed SEO-friendly blog post about ${topic}, that targets the following comma-separated keywords: ${keywords}.
+          The response should be formatted in SEO-friendly HTML, limited to the following HTML tags: p, h1, h2, h3, h4, h5, h6, strong, li, ol, ul, i.`
         },
       ]
     })
@@ -67,8 +63,8 @@ export default withApiAuthRequired(async function handler(
         },
         {
           role: 'user',
-          content: `Write a long and detailed SEO-optimized blog post about ${topic}, that targets the following comma-separated keywords: ${keywords}.
-          The content should be formatted in SEO-optimized HTML, limited to the following HTML tags: p, h1, h2, h3, h4, h5, h6, strong, li, ol, ul, i.`
+          content: `Write a long and detailed SEO-friendly blog post about ${topic}, that targets the following comma-separated keywords: ${keywords}.
+          The response should be formatted in SEO-friendly HTML, limited to the following HTML tags: p, h1, h2, h3, h4, h5, h6, strong, li, ol, ul, i.`
         },
         {
           role: 'assistant',
@@ -76,7 +72,7 @@ export default withApiAuthRequired(async function handler(
         },
         {
           role: 'user',
-          content: 'Generate appropriate title tag text for the above blog post',
+          content: 'Generate appropriate title tag text for the above blog post and return as plain text; no additional quotation marks',
         },
       ]
     })
@@ -91,8 +87,8 @@ export default withApiAuthRequired(async function handler(
         },
         {
           role: 'user',
-          content: `Write a long and detailed SEO-optimized blog post about ${topic}, that targets the following comma-separated keywords: ${keywords}.
-          The content should be formatted in SEO-optimized HTML, limited to the following HTML tags: p, h1, h2, h3, h4, h5, h6, strong, li, ol, ul, i.`
+          content: `Write a long and detailed SEO-friendly blog post about ${topic}, that targets the following comma-separated keywords: ${keywords}.
+          The response should be formatted in SEO-friendly HTML, limited to the following HTML tags: p, h1, h2, h3, h4, h5, h6, strong, li, ol, ul, i.`
         },
         {
           role: 'assistant',
@@ -100,7 +96,7 @@ export default withApiAuthRequired(async function handler(
         },
         {
           role: 'user',
-          content: 'Generate SEO-friendly meta description content for the above blog post',
+          content: 'Generate SEO-friendly meta description text for the above blog post and return as plain text; no additional quotation marks',
         },
       ]
     })
@@ -125,12 +121,10 @@ export default withApiAuthRequired(async function handler(
       userId: userProfile?._id,
       created: new Date(),
     });
+    console.log('POST: ', post);
     res.status(200).json({
-      post: {
-        postContent,
-        title,
-        metaDescription,
-      }})
+      postId: post.insertedId,
+    })
   } catch (error) {
     if (error instanceof OpenAI.APIError) {
       console.error(error.status);
