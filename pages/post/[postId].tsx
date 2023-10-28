@@ -1,9 +1,11 @@
 import { AppLayout } from "@/components/AppLayout/AppLayout";
 import clientPromise from "@/lib/mongodb";
+import { getAppProps } from "@/utils/getAppProps";
 import { getSession, withPageAuthRequired } from "@auth0/nextjs-auth0";
 import { faHashtag } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ObjectId } from "mongodb";
+import { NextApiRequest, NextApiResponse } from "next";
 import { ReactNode } from "react";
 
 const SectionHeader = ({ children }: { children: ReactNode }) => {
@@ -65,14 +67,11 @@ Post.getLayout = function getLayout(page: React.ReactNode, pageProps: any) {
 
 export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(ctx) {
-    const userSession = await getSession(ctx.req, ctx.res);
-    const client = await clientPromise;
-    const db = client.db('BlogStandard');
-    const user = await db.collection('users').findOne({
-      auth0Id: userSession?.user.sub,
-    });
+    const req = ctx.req as NextApiRequest; // find a better way; casting sux
+    const res = ctx.res as NextApiResponse; // find a better way; casting sux
+    const { userSession, client, db, user, ...props } = await getAppProps(req, res);
     const postParam = String(ctx.params?.postId ?? '');
-    const post = await db.collection('posts').findOne({
+    const post = await db?.collection('posts').findOne({
       _id: new ObjectId(postParam),
       userId: user?._id,
     });
@@ -90,6 +89,7 @@ export const getServerSideProps = withPageAuthRequired({
       title: post.title,
       metaDescription: post.metaDescription,
       keywords: post.keywords,
+      ...props
     },
   };
 }});

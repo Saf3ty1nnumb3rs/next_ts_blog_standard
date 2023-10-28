@@ -1,6 +1,8 @@
 import { AppLayout } from "@/components/AppLayout/AppLayout";
+import { getAppProps } from "@/utils/getAppProps";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0";
-import { MouseEvent, MouseEventHandler, useCallback } from "react";
+import { NextApiRequest, NextApiResponse } from "next";
+import { MouseEvent, useCallback } from "react";
 
 export default function TokenTopup() {
   const handleSubmit = useCallback(async (e: MouseEvent) => {
@@ -26,7 +28,13 @@ TokenTopup.getLayout = function getLayout(page: React.ReactNode, pageProps: any)
 }
 export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(ctx) {
+  const req = ctx.req as NextApiRequest; // find a better way; casting sux
+  const res = ctx.res as NextApiResponse; // find a better way; casting sux
+  const { availableTokens, posts } = await getAppProps(req, res);
   return {
-    props: {},
-  };
+    props: {
+      availableTokens,
+      posts,
+    },
+  }
 }});

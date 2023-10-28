@@ -5,7 +5,17 @@ import { Logo } from "../Logo/Logo";
 import Image from "next/image";
 import Link from "next/link";
 
-export const AppLayout = ({ children}: { children: React.ReactNode }) => {
+export const AppLayout = ({
+  children,
+  availableTokens,
+  posts,
+  ...rest
+}: {
+  children: React.ReactNode,
+  availableTokens: number,
+  posts: Post[],
+ }) => {
+  console.log(rest);
   const { user } = useUser();
   console.log('USER: ', user);
   return (
@@ -25,7 +35,7 @@ export const AppLayout = ({ children}: { children: React.ReactNode }) => {
           >
             <FontAwesomeIcon icon={faCoins} className="text-yellow-500" />
             <span className="pl-1">
-              0 tokens available
+              {availableTokens ?? 0} tokens available
             </span>
           </Link>
         </div>
