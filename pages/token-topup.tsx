@@ -10,6 +10,9 @@ export default function TokenTopup() {
     const response = await fetch(`/api/addTokens`, {
       method: 'POST',
     });
+    const json = await response.json();
+    console.log("RESULT: ", json);
+    window.location.href = json?.session.url;
   }, [])
   return (
     <div>
@@ -28,13 +31,12 @@ TokenTopup.getLayout = function getLayout(page: React.ReactNode, pageProps: any)
 }
 export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(ctx) {
-  const req = ctx.req as NextApiRequest; // find a better way; casting sux
-  const res = ctx.res as NextApiResponse; // find a better way; casting sux
-  const { availableTokens, posts } = await getAppProps(req, res);
-  return {
-    props: {
-      availableTokens,
-      posts,
-    },
+    const { availableTokens, posts } = await getAppProps(ctx);
+    return {
+      props: {
+        availableTokens,
+        posts,
+      },
+    }
   }
-}});
+});

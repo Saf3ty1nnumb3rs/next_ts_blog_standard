@@ -15,7 +15,7 @@ const SectionHeader = ({ children }: { children: ReactNode }) => {
     </div>
   );
 };
-export default function Post(props: Post) {
+export default function Post(props: IFormattedPost) {
   console.log(props);
   return (
     <div className="overflow-auto h-full">
@@ -39,7 +39,7 @@ export default function Post(props: Post) {
           Keywords
         </SectionHeader>
         <div className="flex flex-wrap pt-2 gap-1">
-          {props.keywords && props.keywords.split(',').map((keyword: string, i) => (
+          {props.keywords && props.keywords.split(',').map((keyword: string, i: number) => (
             <div
               key={`${keyword}-${i}`}
               className="p-2 rounded-full bg-slate-800 text-white"
@@ -67,9 +67,7 @@ Post.getLayout = function getLayout(page: React.ReactNode, pageProps: any) {
 
 export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(ctx) {
-    const req = ctx.req as NextApiRequest; // find a better way; casting sux
-    const res = ctx.res as NextApiResponse; // find a better way; casting sux
-    const { userSession, client, db, user, ...props } = await getAppProps(req, res);
+    const { userSession, client, db, user, ...props } = await getAppProps(ctx);
     const postParam = String(ctx.params?.postId ?? '');
     const post = await db?.collection('posts').findOne({
       _id: new ObjectId(postParam),

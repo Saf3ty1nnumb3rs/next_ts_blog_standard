@@ -9,11 +9,13 @@ export const AppLayout = ({
   children,
   availableTokens,
   posts,
+  postId,
   ...rest
 }: {
   children: React.ReactNode,
   availableTokens: number,
-  posts: Post[],
+  posts: IFormattedPost[],
+  postId: string | null,
  }) => {
   console.log(rest);
   const { user } = useUser();
@@ -40,7 +42,15 @@ export const AppLayout = ({
           </Link>
         </div>
         <div className="post-list">
-          list of posts
+          {posts.map((post) => (
+            <Link
+              key={post._id}
+              href={`/post/${post._id}`}
+              className={`post-item border-white/0 bg-white/10 ${postId === post._id ? "bg-white/20 border-white/100" : ""}`}
+            >
+              {post.topic}
+            </Link>
+          ))}
         </div>
         <div className="sidebar-footer">
         {!!user ? (

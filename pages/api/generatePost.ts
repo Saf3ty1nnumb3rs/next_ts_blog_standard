@@ -1,5 +1,6 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import clientPromise from '@/lib/mongodb';
+import { IPostCreateDocument } from '@/types';
 import { getSession, withApiAuthRequired } from '@auth0/nextjs-auth0';
 import { ObjectId } from 'mongodb';
 import type { NextApiRequest, NextApiResponse } from 'next'
@@ -32,7 +33,7 @@ export default withApiAuthRequired(async function handler(
     apiKey: process.env.OPENAI_API_KEY,
   });
 
-  const { topic, keywords } = req.body;
+  const { topic, keywords } = req.body as ICreatePostBody;
 
   try {
     const postContentResponse = await openai.chat.completions.create({
@@ -111,8 +112,7 @@ export default withApiAuthRequired(async function handler(
         availableTokens: -1,
       },
     });
-
-    const post = await db.collection('posts').insertOne({
+    const postToInsert: IPostCreateDocument = {
       postContent,
       title,
       metaDescription,
@@ -120,8 +120,9 @@ export default withApiAuthRequired(async function handler(
       keywords,
       userId: userProfile?._id,
       created: new Date(),
-    });
-    console.log('POST: ', post);
+    }
+    const post = await db.collection('posts').insertOne({ ...postToInsert });
+
     res.status(200).json({
       postId: post.insertedId,
     })
@@ -134,8 +135,3 @@ export default withApiAuthRequired(async function handler(
     }
   }
 });
-
-
-
-// The content should be formatted in SEO-optimized HTML. The response must also include appropriate HTML title and meta description content.
-//       The return format must be stringified JSON in the following format

@@ -1,9 +1,12 @@
 import clientPromise from "@/lib/mongodb";
+import { IGetAppProps, IPostDocument } from "@/types";
 import { getSession } from "@auth0/nextjs-auth0";
-import { NextApiRequest, NextApiResponse } from "next";
+import { GetServerSidePropsContext, PreviewData } from "next";
+import { ParsedUrlQuery } from "querystring";
 
-export const getAppProps = async (req: NextApiRequest, res: NextApiResponse) => {
-  const userSession = await getSession(req, res);
+export const getAppProps =
+  async (ctx: GetServerSidePropsContext<ParsedUrlQuery, PreviewData>): Promise<IGetAppProps> => {
+  const userSession = await getSession(ctx.req, ctx.res); // auth0
   const client = await clientPromise;
   const db = client.db("BlogStandard");
   const user = await db.collection("users").findOne({
@@ -17,8 +20,8 @@ export const getAppProps = async (req: NextApiRequest, res: NextApiResponse) => 
   }
   const posts = await db.collection("posts").find({
     userId: user._id,
-  }).toArray();
-
+  }).sort({ created: -1 }).toArray() as IPostDocument[];
+  const postId: string = String(ctx.params?.postId ?? '');
   return {
     userSession,
     client,
@@ -30,5 +33,6 @@ export const getAppProps = async (req: NextApiRequest, res: NextApiResponse) => 
       created: created.toString(),
       ...rest,
     })),
+    postId: postId ?? null,
   }
 };

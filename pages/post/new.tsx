@@ -1,7 +1,6 @@
 import { AppLayout } from "@/components/AppLayout/AppLayout";
 import { getAppProps } from "@/utils/getAppProps";
 import { withPageAuthRequired } from "@auth0/nextjs-auth0";
-import { NextApiRequest, NextApiResponse } from "next";
 import { useRouter } from "next/router";
 import { ChangeEvent, FormEvent, useState } from "react";
 
@@ -24,9 +23,10 @@ export default function NewPost() {
         }),
       });
       const json = await response.json();
-      console.log('RESULT: ', json);
+
       if (json?.postId) {
-        router.push(`/post/${json.postId}`);
+        const postId = String(json.postId);
+        router.push(`/post/${postId}`);
       }
     } catch (error) {
       console.error(error);
@@ -76,9 +76,7 @@ NewPost.getLayout = function getLayout(page: React.ReactNode, pageProps: any) {
 }
 export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(ctx) {
-  const req = ctx.req as NextApiRequest; // find a better way; casting sux
-  const res = ctx.res as NextApiResponse; // find a better way; casting sux
-  const { availableTokens, posts } = await getAppProps(req, res);
+  const { availableTokens, posts } = await getAppProps(ctx);
   return {
     props: {
       availableTokens,
